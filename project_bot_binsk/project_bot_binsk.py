@@ -17,13 +17,24 @@ def get_weather(message):
     r = requests.get(url=url_1, headers=headers)
     # bot.send_message(message.chat.id, r.text)
     if r.status_code == 200:
+        # получаем значение погоды
         data = json.loads(r.text)
+        # Объекты fact
         fact = data["fact"]
+        # Код расшифровки погодного описания. В api.py созданы ключи
+        weather_description = data["fact"]["condition"]
+        if weather_description in condition:
+            wd = condition[weather_description]
+        else:
+            # если эмодзи для погоды нет, выводим другое сообщение
+            wd = "Посмотри в окно, я не понимаю, что там за погода..."
+        # Объекты forecast
         forecast = data["forecast"]
+        # url для большого прогноза из Объектов info
         url = data["info"]
         bot.send_message(message.chat.id, text=f'Температура в Бийске {fact["temp"]}°. '
                                                f'\nОщущается как {fact["feels_like"]}°. '
-                                               # f'\nСейчас на улице {fact["condition"]}.'
+                                               f'\nСейчас на улице {wd}.'
                                                f'\nДавление {fact["pressure_mm"]} мм рт.ст.'
                                                f'\nВлажность воздуха {fact["humidity"]} %.'
                                                f'\nСкорость ветра {fact["wind_speed"]} м\с.'
@@ -39,13 +50,24 @@ def get_weather(message):
     r = requests.get(url=url_2, headers=headers)
     # bot.send_message(message.chat.id, r.text)
     if r.status_code == 200:
+        # получаем значение погоды
         data = json.loads(r.text)
+        # Объекты fact
         fact = data["fact"]
+        # Код расшифровки погодного описания. В api.py созданы ключи
+        weather_description = data["fact"]["condition"]
+        if weather_description in condition:
+            wd = condition[weather_description]
+        else:
+            # если эмодзи для погоды нет, выводим другое сообщение
+            wd = "Посмотри в окно, я не понимаю, что там за погода..."
+        # Объекты forecast
         forecast = data["forecast"]
+        # url для большого прогноза из Объектов info
         url = data["info"]
         bot.send_message(message.chat.id, text=f'Погода в Краснообске {fact["temp"]}°, '
                                                f'\nОщущается как {fact["feels_like"]}°. '
-                                               # f'\nСейчас на улице {fact["condition"]}.'
+                                               f'\nСейчас на улице {wd}.'
                                                f'\nДавление {fact["pressure_mm"]} мм рт.ст.'
                                                f'\nВлажность воздуха {fact["humidity"]} %.'
                                                f'\nСкорость ветра {fact["wind_speed"]} м\с.'
@@ -96,7 +118,8 @@ def start(m, res=False):
     markup.add(item1)
     markup.add(item2)
     markup.add(item3)
-    bot.send_message(m.chat.id, 'Нажми: \nКнопочку "Погода" чтобы посмотреть погоду '
+    bot.send_message(m.chat.id, 'Нажми: '
+                                '\nКнопочку "Погода" чтобы посмотреть погоду '
                                 '\nКнопочку "Факт" для получения интересного факта'
                                 '\n Кнопочку "Поговорка" — для получения мудрой цитаты ',
                      reply_markup=markup)
@@ -122,7 +145,8 @@ def handle_text(message):
     elif 'Саша' in message.text.strip():
         bot.send_message(message.chat.id, 'Саша, самый лучший во всем мире')
     elif 'деньги' in message.text.strip():
-        bot.send_message(message.chat.id, f'Контакт {message.from_user.first_name} заблокирован на 30 лет, 23 месяца и 12 дней')
+        bot.send_message(message.chat.id, f'Контакт {message.from_user.first_name} '
+                                          f'заблокирован на 30 лет, 3 месяца и 12 дней')
     else:
         pass
 
