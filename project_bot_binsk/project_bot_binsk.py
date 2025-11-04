@@ -2,6 +2,8 @@ import telebot
 import random
 import requests
 import json
+from clicks import connect_db
+
 # from aiogram import Bot, Dispatcher, executor, types
 
 # import datetime
@@ -26,39 +28,35 @@ def start(message, res=False):
     keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)  # клавиатура
     # resize_keyboard=True для нормальной работы кнопок, в некоторых случаях кнопки могут сильно растягиваться
     button1 = telebot.types.KeyboardButton(text='Погода')
-    # button2 = telebot.types.KeyboardButton(text='Праздники')
     button2 = telebot.types.KeyboardButton(text='Факт')
     button3 = telebot.types.KeyboardButton(text='Анекдот')
     button4 = telebot.types.KeyboardButton(text='Поговорка')
+    button5 = telebot.types.KeyboardButton(text='Праздники')
     # keyboard.add(button1)  # одна кнопка в ряду
     keyboard.add(button1, button2)  # две кнопки в ряду
-    keyboard.add(button3, button4)  # две кнопки в ряду
-    # keyboard.add(button3, button4, button5)  # три кнопки в ряду
+    # keyboard.add(button3, button4)  # две кнопки в ряду
+    keyboard.add(button3, button4, button5)  # три кнопки в ряду
     # эмодзи - '😘'
     emoji = "\U0001f618"
     # bot.send_message(message.chat.id, f'Я запустился и приступил к работе {emoji}!')
-    bot.send_message(message.chat.id, f'Я запустился и приступил к работе {emoji}!', reply_markup=keyboard)
+    # Напоминание бота о важной дате
+    # Определение текущей даты
+    current_date = datetime.datetime.now().strftime('%m-%d')
+    # метод strftime(), который позволяет форматировать дату по заданной маске.
+    # current_date = datetime.date.today().isoformat()
+    # # isoformat() - перевод datetime.date в str
+    cursor = connect_db.cursor()
+    # Сравнение текущей даты с датой, в csv файле
+    cursor.execute(f"SELECT FIO, event FROM holidays WHERE holly_date = '{current_date}'")
+    for event in cursor:
+        if event:
+            bot.send_message(message.chat.id, f'Напоминаю, что сегодня {event[1]} у {event[0]}')
+    else:
+        # если нет события
+        bot.send_message(message.chat.id, f'Я запустился и приступил к работе {emoji}!', reply_markup=keyboard)
 
-# # Напоминание бота о важной дате
-# @bot.message_handler(commands=['date'])
-# def imp_event(message, res=False):
-#     # Определение текущей даты
-#     current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-#     # метод strftime(), который позволяет форматировать дату по заданной маске.
-#     # current_date = datetime.date.today().isoformat()
-#     # # isoformat() - перевод datetime.date в str
-#     # print('cur 1', current_date)
-#     # В переменные закидываем событие и виновников тожества
-#     date, event, participants = row.values()
-#     # Сравнение текущей даты с датой, в csv файле
-#     if current_date in date:
-#         # если есть событие
-#         text_event = f'Напоминаю, что сегодня {event}{participants}!'
-#     else:
-#         # если нет события
-#         text_event = 'Сегодня нет праздников!'
-#         # бот кидает событие в чат
-#     bot.send_message(message.chat.id, text_event)
+    cursor.close()
+    connect_db.close()
 
 
 # Реакция бота на сообщение от юзера
@@ -99,34 +97,42 @@ def handle_text(message):
         keyboard_news.add(button_1)
         bot.send_message(message.chat.id, f'Ты можешь узнать последние новости на РБК- '
                                           f'Новосибирск', reply_markup=keyboard_news)
-    # elif message.text.strip() == 'Праздники':
-    #     # Напоминание бота о важной дате
-    #     # Определение текущей даты
-    #     current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-    #     # метод strftime(), который позволяет форматировать дату по заданной маске.
-    #     # current_date = datetime.date.today().isoformat()
-    #     # # isoformat() - перевод datetime.date в str
-    #     # print('cur 1', current_date)
-    #     # # Загружаем список важных дат
-    #     way_imp_date = os.path.join('project_bot_binsk', 'imp_date.csv')
-    #     with open(way_imp_date, 'r') as f:
-    #         csv_reader = csv.DictReader(f)
-    #
-    #         for row in csv_reader:
-    #             # В переменные закидываем событие и виновников тожества
-    #             date, event, participants = row.values()
-    #             # Сравнение текущей даты с датой, в csv файле
-    #             event_day = ''
-    #             while current_date in row.values():
-    #                 # если есть событие
-    #                 # бот кидает сообщение в чат
-    #                 event_day = f'Напоминаю, что сегодня {event} {participants}!'
-    #             else:
-    #                 # если нет события
-    #                 event_day = 'Сегодня нет праздников!'
-    #                 break
-    #             bot.send_message(message.chat.id, event_day)
+        """"""""""""""""""""""""""""""""""""""
+        # Напоминание бота о важной дате (дни рождения или отсылка на сайт https://www.calend.ru/)
+    elif message.text.strip() == 'Праздники':
+        connect_db.reconnect(attempts=1, delay=0)  # (attempts=1, delay=0) — метод пытается снова
+        # соединиться с сервером MySQL 1 раз и ждёт 0 секунд между попытками.
+        cursor = connect_db.cursor()
+        # Определение текущей даты
+        current_date = datetime.datetime.now().strftime('%m-%d')
+        # метод strftime(), который позволяет форматировать дату по заданной маске.
+        # current_date = datetime.date.today().isoformat()
+        # # isoformat() - перевод datetime.date в str
+        # Сравнение текущей даты с датой в базе
+        cursor.execute(f"SELECT FIO, event FROM holidays WHERE holly_date = '{current_date}'")
+        for event in cursor:
+            if event:
+                bot.send_message(message.chat.id, f'Напоминаю, что сегодня {event[1]} у {event[0]}')
+        else:
+            # если нет дня рождения
+            # url = "https://www.calend.ru/"
+            # response = requests.get(url)
+            # html = response.text
+            # print(html)
+            #
+            # # Найти первый элемент с тегом <title>
+            # title = soup.find('title').text
+            # print(title)
+            #
+            # # Найти все элементы с тегом <a>
+            # links = soup.find_all('a')
+            # for link in links:
+            #     print(link.get('href'))
 
+            bot.send_message(message.chat.id, f'Сегодня нет праздников!')
+
+        cursor.close()
+        connect_db.close()
     else:
         pass
 
