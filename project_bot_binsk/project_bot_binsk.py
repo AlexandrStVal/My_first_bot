@@ -11,7 +11,7 @@ from clicks import connect_db
 # from telebot.types import InlineKeyboardMarkup
 
 from settings import valid_token_bs
-from api import *
+from api import *  # описание погоды
 from files import *
 
 # подгружаем бота
@@ -38,25 +38,7 @@ def start(message, res=False):
     keyboard.add(button3, button4, button5)  # три кнопки в ряду
     # эмодзи - '😘'
     emoji = "\U0001f618"
-    # bot.send_message(message.chat.id, f'Я запустился и приступил к работе {emoji}!')
-    # Напоминание бота о важной дате
-    # Определение текущей даты
-    current_date = datetime.datetime.now().strftime('%m-%d')
-    # метод strftime(), который позволяет форматировать дату по заданной маске.
-    # current_date = datetime.date.today().isoformat()
-    # # isoformat() - перевод datetime.date в str
-    cursor = connect_db.cursor()
-    # Сравнение текущей даты с датой, в csv файле
-    cursor.execute(f"SELECT FIO, event FROM holidays WHERE holly_date = '{current_date}'")
-    for event in cursor:
-        if event:
-            bot.send_message(message.chat.id, f'Напоминаю, что сегодня {event[1]} у {event[0]}')
-    else:
-        # если нет события
-        bot.send_message(message.chat.id, f'Я запустился и приступил к работе {emoji}!', reply_markup=keyboard)
-
-    cursor.close()
-    connect_db.close()
+    bot.send_message(message.chat.id, f'Я запустился и приступил к работе {emoji}!')
 
 
 # Реакция бота на сообщение от юзера
@@ -97,7 +79,7 @@ def handle_text(message):
         keyboard_news.add(button_1)
         bot.send_message(message.chat.id, f'Ты можешь узнать последние новости на РБК- '
                                           f'Новосибирск', reply_markup=keyboard_news)
-        """"""""""""""""""""""""""""""""""""""
+
         # Напоминание бота о важной дате (дни рождения или отсылка на сайт https://www.calend.ru/)
     elif message.text.strip() == 'Праздники':
         connect_db.reconnect(attempts=1, delay=0)  # (attempts=1, delay=0) — метод пытается снова
@@ -128,6 +110,8 @@ def handle_text(message):
             # links = soup.find_all('a')
             # for link in links:
             #     print(link.get('href'))
+
+            # https://www.calend.ru/
 
             bot.send_message(message.chat.id, f'Сегодня нет праздников!')
 

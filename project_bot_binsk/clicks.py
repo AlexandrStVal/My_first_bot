@@ -24,6 +24,10 @@ def create_connection(hostname, username):
 
 connect_db = create_connection("localhost", "root")
 
+
+
+
+
 # def create_db(connect_db):
 #     cursor = connect_db.cursor()
 #     cursor.execute('''
