@@ -4,7 +4,9 @@ import requests
 import json
 from clicks import connect_db
 
-# from aiogram import Bot, Dispatcher, executor, types
+# from aiogram import Bot, types  # Bot определяет, на какие команды от пользователя и каким способом отвечать.
+# from aiogram import Dispatcher  # позволяет отслеживать обновления.
+# from aiogram.utils import executor
 
 # import datetime
 
@@ -16,7 +18,8 @@ from files import *
 
 # подгружаем бота
 bot = telebot.TeleBot(valid_token_bs)
-
+# telebot = Bot(valid_token_bs)
+# dp = Dispatcher(storage=MemoryStorage())
 
 # Команды боту
 # Кнопки *Погода *Факт *Поговорка
@@ -43,7 +46,9 @@ def start(message, res=False):
 
 # Реакция бота на сообщение от юзера
 @bot.message_handler(content_types=['text'])
-def handle_text(message):
+# @dp.message_handler(content_types=['text'])
+# async def handle_text(message: types.Message):
+def handle_text(message: telebot.types.Message):
     # Если юзер нажал Факт, выдаем ему случайный факт
     if message.text.strip() == 'Факт':
         # strip() - функция используется для удаления символов или пробелов из начала и конца исходной строки.
@@ -213,6 +218,7 @@ def voice_message_bot(message: telebot.types.Message):
 if __name__ == '__main__':  # если модуль запущен напрямую, не импортирован name равен "main"
     print('Bot started!')
     bot.infinity_polling(none_stop=True)  # чтобы запустить бота
+    # executor.start_polling(dp)
 # параметр none_stop=True говорит, что бот должен стараться не прекращать работу при возникновении
 # каких-либо ошибок
 
