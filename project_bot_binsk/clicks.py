@@ -1,28 +1,71 @@
 from mysql.connector import connect, Error  #
 from settings import password, database_name  #
-import time
+import datetime
+import contextlib
 
-# # --- КОНФИГУРАЦИЯ БОТА ---
-# MAX_PRESSES_PER_HOUR = 5  # Максимальное количество нажатий за интервал
-# RESET_INTERVAL_SECONDS = 3600  # Интервал сброса счетчика (3600 секунд = 1 час)
-# # ------------------------
-
-# --- ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ ---
-def create_connection(hostname, username):
+@contextlib.contextmanager
+def create_connection():
     connection = None
     try:
         connection = connect(
-            host=hostname,
-            user=username,
+            host="localhost",
+            user="root",
             passwd=password,
             db=database_name
         )
         print("Connection to MySQL DB successful")
+        yield connection
     except Error as err:
         print(f"The error '{err}' occurred")
-    return connection
+        if connection:
+            connection.rollback()
+        raise
+    finally:
+        if connection and connection.is_connected():
+            connection.close()
+            print("MySQL connection closed")
 
-connect_db = create_connection("localhost", "root")
+def database_operation():
+    with create_connection() as connect:
+        cursor = connect.cursor()
+        # Определение текущей даты
+        current_date = datetime.datetime.now().strftime('%m-%d')
+        # метод strftime(), который позволяет форматировать дату по заданной маске.
+        # current_date = datetime.date.today().isoformat()
+        # # isoformat() - перевод datetime.date в str
+        # Выполняем операции с базой данных
+        # Безопасное выполнение запроса через параметры
+        query = "SELECT FIO, event FROM holidays WHERE holly_date = %s"
+        # %s — это плейсхолдер (placeholder), который обозначает место, куда будет безопасно подставлено
+        # значение.
+        cursor.execute(query, (current_date,))
+        result = cursor.fetchall()
+        cursor.close()
+        # Соединение автоматически закроется после выхода из блока with
+    return result
+
+
+
+# # # --- КОНФИГУРАЦИЯ БОТА ---
+# # MAX_PRESSES_PER_HOUR = 5  # Максимальное количество нажатий за интервал
+# # RESET_INTERVAL_SECONDS = 3600  # Интервал сброса счетчика (3600 секунд = 1 час)
+# # # ------------------------
+#
+# # --- ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ ---
+# def create_connection():
+#     try:
+#         connection = connect(
+#             host="localhost",
+#             user="root",
+#             passwd=password,
+#             db=database_name
+#         )
+#         print("Connection to MySQL DB successful")
+#         return connection
+#     except Error as err:
+#         print(f"The error '{err}' occurred")
+#         return None
+# connect_db = create_connection()
 
 
 
